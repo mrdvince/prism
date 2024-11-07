@@ -1,38 +1,39 @@
 import FontAwesome from '@expo/vector-icons/FontAwesome';
-import { Link, Tabs } from 'expo-router';
-import { Pressable, useColorScheme } from 'react-native';
+import { Drawer } from 'expo-router/drawer';
+import { useColorScheme } from 'react-native';
 import Colors from '../../constants/Colors';
 
-function TabBarIcon(props: {
+function DrawerIcon(props: {
   name: React.ComponentProps<typeof FontAwesome>['name'];
   color: string;
 }) {
-  return <FontAwesome size={28} style={{ marginBottom: -3 }} {...props} />;
+  return <FontAwesome size={24} {...props} />;
 }
 
-export default function TabLayout() {
+export default function DrawerLayout() {
   const colorScheme = useColorScheme();
 
   return (
-    <Tabs
+    <Drawer
       screenOptions={{
-        tabBarActiveTintColor: Colors[colorScheme ?? 'light'].tint,
+        drawerActiveTintColor: Colors[colorScheme ?? 'light'].tint,
+        drawerPosition: 'left',
         headerShown: false,
       }}>
-      <Tabs.Screen
+      <Drawer.Screen
         name="index"
         options={{
           title: 'Papers',
-          tabBarIcon: ({ color }) => <TabBarIcon name="book" color={color} />,
+          drawerIcon: ({ color }) => <DrawerIcon name="book" color={color} />,
         }}
       />
-      <Tabs.Screen
+      <Drawer.Screen
         name="explore"
         options={{
           title: 'Explore',
-          tabBarIcon: ({ color }) => <TabBarIcon name="search" color={color} />,
+          drawerIcon: ({ color }) => <DrawerIcon name="search" color={color} />,
         }}
       />
-    </Tabs>
+    </Drawer>
   );
 }
