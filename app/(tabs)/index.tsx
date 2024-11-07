@@ -11,12 +11,12 @@ const SCREEN_HEIGHT = Dimensions.get('window').height;
 const SWIPE_THRESHOLD = 120;
 
 const getDiscoveryMessage = (paper: Paper) => {
-  const messages = {
+  const messages: Record<number, string> = {
     1: "Discover how attention mechanisms are revolutionizing deep learning",
     2: "Explore the breakthrough that changed NLP forever",
     3: "See how language models are pushing the boundaries of AI"
   };
-  return messages[paper.id] || "Discover groundbreaking research";
+  return messages[paper.id as number] || "Discover groundbreaking research";
 };
 
 const PaperCard = ({ paper, style }: { paper: Paper; style?: any }) => {
