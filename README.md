@@ -1,8 +1,29 @@
-# Welcome to your Expo app 👋
+# Prism - (tinder for papers)
+> This is me goofing around because reasons.
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+A Tinder-like interface for discovering and exploring research papers. 
+Swipe right to save interesting papers, swipe left to skip.
 
-## Get started
+<img src="screenshots/cap.gif" alt="App Demo" width="250"/>
+
+## Features
+
+- Intuitive swipe interface for discovering research papers
+- Visual representation of paper metrics with dynamic charts
+- Save interesting papers for later reading
+- Share papers with colleagues
+- Clean, modern UI with paper previews
+- Support for various paper types (research, review, preprint)
+
+## Tech Stack
+
+- React Native / Expo
+- TypeScript
+- Expo Router for navigation
+- React Native Reanimated for animations
+- React Native Gesture Handler for swipe interactions
+
+## Getting Started
 
 1. Install dependencies
 
@@ -10,41 +31,35 @@ This is an [Expo](https://expo.dev) project created with [`create-expo-app`](htt
    npm install
    ```
 
-2. Start the app
+2. Start the development server
 
    ```bash
-    npx expo start
+   npx expo start
    ```
 
-In the output, you'll find options to open the app in a
+3. Run on your preferred platform:
+- Press 'i' for iOS simulator
+- Press 'a' for Android emulator
+- Scan QR code with Expo Go app for physical device
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
+## Project Structure
 
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
-
-## Get a fresh project
-
-When you're ready, run:
-
-```bash
-npm run reset-project
+```
+prism/
+├── app/                   # Main application code
+│   ├── (tabs)/            # Tab-based navigation
+│   ├── models/            # Data models & types
+│   └── services/          # API & mock services
+├── assets/                # Static assets
+└── constants/             # App constants
 ```
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+## Development
 
-## Learn more
+- Mock data service is used in development
+- Real API integration ready for production (TODO)
+- Modular component structure for easy extension
 
-To learn more about developing your project with Expo, look at the following resources:
+## License
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
-
-## Join the community
-
-Join our community of developers creating universal apps.
-
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+MIT
