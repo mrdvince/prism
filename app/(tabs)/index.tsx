@@ -1,32 +1,79 @@
-import React, { useState, useRef } from 'react';
-import { View, Text, StyleSheet, Dimensions, Animated, PanResponder } from 'react-native';
+import React, { useState, useRef, useEffect } from 'react';
+import { View, Text, StyleSheet, Dimensions, Animated, PanResponder, TouchableOpacity, Image, ScrollView } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
+import FontAwesome from '@expo/vector-icons/FontAwesome';
+import { Paper } from '../models/Paper';
+import { paperService } from '../services/paperService';
 
 const SCREEN_WIDTH = Dimensions.get('window').width;
 const SCREEN_HEIGHT = Dimensions.get('window').height;
 const SWIPE_THRESHOLD = 120;
 
-interface Paper {
-  id: number;
-  title: string;
-  authors: string[];
-  abstract: string;
-  journal: string;
-  year: number;
-  keywords: string[];
-  citations?: number;
-}
+const getDiscoveryMessage = (paper: Paper) => {
+  const messages = {
+    1: "Discover how attention mechanisms are revolutionizing deep learning",
+    2: "Explore the breakthrough that changed NLP forever",
+    3: "See how language models are pushing the boundaries of AI"
+  };
+  return messages[paper.id] || "Discover groundbreaking research";
+};
 
 const PaperCard = ({ paper, style }: { paper: Paper; style?: any }) => {
   return (
     <Animated.View style={[styles.card, style]}>
       <View style={styles.cardContent}>
-        <View style={styles.citationCount}>
-          <Text style={styles.citationText}>↗ {paper.citations || '52,000'}</Text>
+        <View style={styles.header}>
+          <Text style={styles.headerTitle}>Discover</Text>
+          <Text style={styles.headerSubtitle}>
+            {getDiscoveryMessage(paper)}
+          </Text>
         </View>
+        
+        {/* Alternate between different visualization types */}
+        <View style={styles.diagramContainer}>
+          <View style={styles.placeholderDiagram}>
+            {paper.id === 1 ? (
+              // Bar chart for first paper
+              <View style={styles.dummyBars}>
+                <View style={[styles.bar, { height: 60 }]} />
+                <View style={[styles.bar, { height: 40 }]} />
+                <View style={[styles.bar, { height: 80 }]} />
+                <View style={[styles.bar, { height: 30 }]} />
+              </View>
+            ) : paper.id === 2 ? (
+              // Line graph for second paper
+              <View style={styles.lineGraph}>
+                <View style={styles.line} />
+                <View style={[styles.dot, { left: '20%', top: '60%' }]} />
+                <View style={[styles.dot, { left: '40%', top: '40%' }]} />
+                <View style={[styles.dot, { left: '60%', top: '20%' }]} />
+                <View style={[styles.dot, { left: '80%', top: '30%' }]} />
+              </View>
+            ) : (
+              // Scatter plot for third paper
+              <View style={styles.scatterPlot}>
+                {[...Array(8)].map((_, i) => (
+                  <View
+                    key={i}
+                    style={[
+                      styles.scatter,
+                      {
+                        left: `${20 + Math.random() * 60}%`,
+                        top: `${20 + Math.random() * 60}%`
+                      }
+                    ]}
+                  />
+                ))}
+              </View>
+            )}
+          </View>
+        </View>
+
         <Text style={styles.title}>{paper.title}</Text>
-        <Text style={styles.authors}>{paper.authors.join(', ')}</Text>
+        <Text style={styles.authors}>
+          {paper.authors.map(author => author.name).join(', ')}
+        </Text>
         <Text style={styles.journalYear}>
           {paper.journal} {paper.year}
         </Text>
@@ -34,13 +81,19 @@ const PaperCard = ({ paper, style }: { paper: Paper; style?: any }) => {
           <Text style={styles.abstract}>{paper.abstract}</Text>
         </View>
         <View style={styles.metadata}>
-          <View style={styles.tags}>
-            {paper.keywords.map((keyword, index) => (
-              <View key={index} style={styles.tag}>
-                <Text style={styles.tagText}>{keyword}</Text>
-              </View>
-            ))}
-          </View>
+          <ScrollView 
+            horizontal 
+            showsHorizontalScrollIndicator={false}
+            style={styles.tagsScrollView}
+          >
+            <View style={styles.tags}>
+              {paper.keywords.map((keyword, index) => (
+                <View key={index} style={styles.tag}>
+                  <Text style={styles.tagText}>{keyword}</Text>
+                </View>
+              ))}
+            </View>
+          </ScrollView>
         </View>
       </View>
     </Animated.View>
@@ -48,38 +101,26 @@ const PaperCard = ({ paper, style }: { paper: Paper; style?: any }) => {
 };
 
 export default function TabOneScreen() {
-  const [papers] = useState<Paper[]>([
-    {
-      id: 1,
-      title: "Attention Is All You Need",
-      authors: ["Vaswani et al."],
-      abstract: "We propose a new network architecture based solely on attention mechanisms. Experiments show these models to be superior in quality while being more parallelizable and requiring significantly less time to train...",
-      journal: "NeurIPS",
-      year: 2017,
-      keywords: ["Deep Learning", "Attention", "Transformers"],
-      citations: 52000
-    },
-    {
-      id: 2,
-      title: "BERT: Pre-training of Deep Bidirectional Transformers",
-      authors: ["Devlin et al."],
-      abstract: "We introduce a new language representation model called BERT, which stands for Bidirectional Encoder Representations from Transformers...",
-      journal: "NAACL",
-      year: 2019,
-      keywords: ["NLP", "Transformers", "Pre-training"],
-      citations: 48000
-    },
-    {
-      id: 3,
-      title: "GPT-3: Language Models are Few-Shot Learners",
-      authors: ["Brown et al."],
-      abstract: "We demonstrate that scaling language models greatly improves task-agnostic, few-shot performance...",
-      journal: "NeurIPS",
-      year: 2020,
-      keywords: ["Language Models", "Few-shot Learning", "AI"],
-      citations: 25000
+  const [papers, setPapers] = useState<Paper[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    loadPapers();
+  }, []);
+
+  const loadPapers = async () => {
+    try {
+      setLoading(true);
+      const response = await paperService.getPapers(1, 10);
+      setPapers(response.papers);
+    } catch (err) {
+      setError('Failed to load papers');
+      console.error(err);
+    } finally {
+      setLoading(false);
     }
-  ]);
+  };
 
   const [currentIndex, setCurrentIndex] = useState(0);
   const position = useRef(new Animated.ValueXY()).current;
@@ -143,6 +184,38 @@ export default function TabOneScreen() {
 
   const insets = useSafeAreaInsets();
 
+  const renderBottomBar = () => (
+    <View style={styles.bottomBar}>
+      <TouchableOpacity 
+        style={styles.actionButton} 
+        onPress={() => swipeLeft()}
+      >
+        <FontAwesome name="times" size={24} color="#e74c3c" />
+      </TouchableOpacity>
+      
+      <TouchableOpacity 
+        style={styles.actionButton} 
+        onPress={() => console.log('Bookmark:', papers[currentIndex].title)}
+      >
+        <FontAwesome name="bookmark" size={24} color="#2f95dc" />
+      </TouchableOpacity>
+
+      <TouchableOpacity 
+        style={styles.actionButton} 
+        onPress={() => swipeRight()}
+      >
+        <FontAwesome name="heart" size={24} color="#27ae60" />
+      </TouchableOpacity>
+
+      <TouchableOpacity 
+        style={styles.actionButton} 
+        onPress={() => console.log('Share:', papers[currentIndex].title)}
+      >
+        <FontAwesome name="share" size={24} color="#9b59b6" />
+      </TouchableOpacity>
+    </View>
+  );
+
   if (currentIndex >= papers.length) {
     return (
       <View style={styles.container}>
@@ -182,6 +255,7 @@ export default function TabOneScreen() {
             );
           }).reverse()}
         </View>
+        {renderBottomBar()}
       </SafeAreaView>
     </GestureHandlerRootView>
   );
@@ -268,11 +342,14 @@ const styles = StyleSheet.create({
     borderTopWidth: 1,
     borderTopColor: '#eee',
     paddingTop: 16,
+    marginTop: 'auto', // Push to bottom of card
+  },
+  tagsScrollView: {
+    flexGrow: 0,
   },
   tags: {
     flexDirection: 'row',
-    flexWrap: 'nowrap',
-    overflow: 'hidden',
+    paddingRight: 16, // Add padding for last tag
   },
   tag: {
     backgroundColor: '#f0f0f0',
@@ -291,5 +368,109 @@ const styles = StyleSheet.create({
     color: '#666',
     textAlign: 'center',
     marginTop: '50%',
+  },
+  bottomBar: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    flexDirection: 'row',
+    justifyContent: 'space-evenly',
+    alignItems: 'center',
+    paddingVertical: 16,
+    paddingHorizontal: 30,
+    backgroundColor: 'white',
+    borderTopLeftRadius: 30,
+    borderTopRightRadius: 30,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: -2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 5,
+  },
+  actionButton: {
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    backgroundColor: '#f8f9fa',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  header: {
+    marginBottom: 24,
+  },
+  headerTitle: {
+    fontSize: 32,
+    fontWeight: 'bold',
+    marginBottom: 8,
+  },
+  headerSubtitle: {
+    fontSize: 16,
+    color: '#666',
+    lineHeight: 22,
+    fontStyle: 'italic',
+  },
+  diagramContainer: {
+    height: 200,
+    marginBottom: 24,
+    backgroundColor: '#f8f9fa',
+    borderRadius: 16,
+    overflow: 'hidden',
+  },
+  placeholderDiagram: {
+    flex: 1,
+    padding: 16,
+    justifyContent: 'center',
+  },
+  dummyChart: {
+    height: 2,
+    backgroundColor: '#ddd',
+    marginVertical: 20,
+  },
+  dummyBars: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    alignItems: 'flex-end',
+    height: 100,
+  },
+  bar: {
+    width: 30,
+    backgroundColor: '#2f95dc',
+    opacity: 0.7,
+    borderRadius: 4,
+  },
+  lineGraph: {
+    flex: 1,
+    position: 'relative',
+    justifyContent: 'center',
+  },
+  line: {
+    height: 2,
+    backgroundColor: '#2f95dc',
+    position: 'absolute',
+    width: '100%',
+    top: '50%',
+  },
+  dot: {
+    width: 12,
+    height: 12,
+    borderRadius: 6,
+    backgroundColor: '#2f95dc',
+    position: 'absolute',
+  },
+  scatterPlot: {
+    flex: 1,
+    position: 'relative',
+  },
+  scatter: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: '#2f95dc',
+    position: 'absolute',
+    opacity: 0.7,
   },
 });
